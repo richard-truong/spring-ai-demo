@@ -32,7 +32,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/actuator/health").permitAll()
+                .requestMatchers("/api/v1/auth/**", "/api/v1/suggest", "/actuator/health").permitAll()
                 .anyRequest().authenticated())
             .exceptionHandling(handling -> handling
                 .authenticationEntryPoint((request, response, authException) -> {
