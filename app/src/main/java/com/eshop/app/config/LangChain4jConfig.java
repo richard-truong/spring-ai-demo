@@ -43,8 +43,12 @@ public class LangChain4jConfig {
     @Bean
     @Profile("gemini")
     public TokenCountEstimator geminiTokenCountEstimator(
-            @Value("${langchain4j.google-ai-gemini.chat-model.model-name:gemini-2.5-flash}") String modelName) {
-        return GoogleAiGeminiTokenCountEstimator.builder().modelName(modelName).build();
+            @Value("${langchain4j.google-ai-gemini.chat-model.model-name:gemini-2.5-flash}") String modelName,
+            @Value("${langchain4j.google-ai-gemini.chat-model.api-key:}") String apiKey) {
+        return GoogleAiGeminiTokenCountEstimator.builder()
+            .modelName(modelName)
+            .apiKey(apiKey)
+            .build();
     }
 
     @Bean
