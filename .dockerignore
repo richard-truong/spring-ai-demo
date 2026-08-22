@@ -1,0 +1,10 @@
+.git
+.gitignore
+.gradle
+build
+**/build
+.idea
+*.iml
+.claude
+.env
+docker/db/data

@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-eshop}
+      POSTGRES_USER: ${POSTGRES_USER:-eshop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eshop}
+    volumes:
+      - eshop-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eshop} -d ${POSTGRES_DB:-eshop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-eshop}
+      DB_USER: ${POSTGRES_USER:-eshop}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-eshop}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set to a random secret of at least 32 bytes}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  eshop-db-data:
