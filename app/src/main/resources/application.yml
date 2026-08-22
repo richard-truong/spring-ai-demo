@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: EvShop
@@ -21,3 +22,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:}
     expiration: ${JWT_EXPIRATION:3600}
+
+langchain4j:
+  chat-memory:
+    max-tokens: 2000
