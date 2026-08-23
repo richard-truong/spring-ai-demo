@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import LoginPrompt from "@/components/LoginPrompt";
 import type { Suggestion } from "@/lib/types";
 
 const PLATFORMS = ["Instagram", "Facebook", "Shopee", "Lazada", "TikTok", "Other"];
@@ -11,11 +12,13 @@ export default function SuggestPage() {
   const [platform, setPlatform] = useState("Shopee");
   const [result, setResult] = useState<Suggestion | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setUnauthorized(false);
     setResult(null);
     setLoading(true);
     try {
@@ -27,7 +30,8 @@ export default function SuggestPage() {
         }),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Suggestion failed.");
+      if (err instanceof ApiError && err.status === 401) setUnauthorized(true);
+      else setError(err instanceof Error ? err.message : "Suggestion failed.");
     } finally {
       setLoading(false);
     }
@@ -75,6 +79,7 @@ export default function SuggestPage() {
         </button>
       </form>
 
+      {unauthorized && <div className="mt-4"><LoginPrompt /></div>}
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       {result && (
         <div className="mt-6 max-w-md rounded-xl border border-blue-200 bg-blue-50 p-6">

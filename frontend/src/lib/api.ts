@@ -47,7 +47,7 @@ export async function toApiError(res: Response): Promise<ApiError> {
     detail = "Too many requests — please wait about a minute and try again.";
   }
   if (res.status === 401) {
-    detail = "Your session has expired. Please log in again.";
+    detail = "Authentication required. Please log in.";
   }
   return new ApiError(res.status, detail);
 }

@@ -1,22 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
+import LoginPrompt from "@/components/LoginPrompt";
 import type { Product } from "@/lib/types";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     api<Product[]>("/api/v1/products")
       .then(setProducts)
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load products."),
-      );
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 401) setUnauthorized(true);
+        else setError(err instanceof Error ? err.message : "Failed to load products.");
+      });
   }, []);
 
+  if (unauthorized) return <LoginPrompt />;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!products) return <p className="text-gray-500">Loading products…</p>;
 

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { formatPrice } from "@/components/ProductCard";
+import LoginPrompt from "@/components/LoginPrompt";
 import { useCart } from "@/components/CartContext";
 import type { Product } from "@/lib/types";
 
@@ -14,16 +15,19 @@ export default function ProductDetailPage() {
   const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     api<Product>(`/api/v1/products/${id}`)
       .then(setProduct)
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load product."),
-      );
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 401) setUnauthorized(true);
+        else setError(err instanceof Error ? err.message : "Failed to load product.");
+      });
   }, [id]);
 
+  if (unauthorized) return <LoginPrompt />;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!product) return <p className="text-gray-500">Loading…</p>;
 
