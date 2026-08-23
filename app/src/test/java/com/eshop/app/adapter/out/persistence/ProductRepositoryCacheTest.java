@@ -6,6 +6,7 @@ import com.eshop.core.application.port.out.ProductRepositoryPort;
 import com.eshop.core.domain.model.Product;
 import com.eshop.core.domain.vo.Money;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.math.BigDecimal;
@@ -75,6 +76,7 @@ class ProductRepositoryCacheTest {
     private AnnotationConfigApplicationContext buildContext(ProductJpaRepository jpaRepository) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.register(CacheConfig.class);
+        context.register(ConcurrentMapCacheManager.class);
         context.getBeanFactory().registerSingleton("jpaRepository", jpaRepository);
         context.register(ProductRepositoryAdapter.class);
         context.refresh();

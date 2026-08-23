@@ -18,12 +18,16 @@ Spring Boot e-commerce backend following Hexagonal Architecture (Ports & Adapter
 ## Run with Docker
 
 ```bash
-# DB only (with seed script)
+# DB + Redis + Qdrant only (with seed script)
 docker compose -f docker/docker-compose.db.yml up -d
 
-# App + DB together (app applies Flyway migrations on startup)
+# App + DB + Redis + Qdrant together (app applies Flyway migrations on startup)
 docker compose -f docker/docker-compose.yml up --build
 ```
+
+Redis backs the Spring Cache (`products` cache, 5-minute TTL). When running the app
+locally outside Docker, Redis must be reachable at `localhost:6379` (override with
+`REDIS_HOST` / `REDIS_PORT`).
 
 Configuration is injected via environment variables (see `.env.example`).
 
