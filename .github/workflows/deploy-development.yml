@@ -1,0 +1,68 @@
+name: Deploy Development
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push dev image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: build-push
+    environment: development
+    concurrency:
+      group: development
+      cancel-in-progress: false
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    steps:
+      # No real infrastructure yet, so deployment is stubbed. Replace with
+      # kubectl / docker compose / ssh ... using image ghcr.io/...:<sha>
+      - name: Deploy image to development
+        run: echo "Deploy to development skipped: no infrastructure configured yet (TODO)"
+
+      # Slack: no webhook configured yet -> curl fails -> echo message (keeps job green)
+      - name: Notify Slack
+        run: |
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data '{"text":"EvShop deployed to development: ${{ github.sha }}"}' \
+            "${SLACK_WEBHOOK_URL:-}" || echo "Slack notification skipped: webhook not configured or unreachable"
+
+      # Jira: no credentials configured yet -> curl fails -> echo message
+      - name: Update Jira issue status
+        run: |
+          ISSUE=EVS-1 # TODO: derive issue key from branch name
+          curl -s -X POST "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE/transitions" \
+            -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H 'Content-Type: application/json' \
+            --data '{"transition":{"id":"11"}}' || echo "Jira status update skipped: credentials not configured or API unreachable"
