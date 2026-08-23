@@ -42,9 +42,10 @@ app:
       refill-period-seconds: 60
     rules:
       - path-pattern: /api/v1/auth/**
-        capacity: 5
-        refill-tokens: 1
-        refill-period-seconds: 60
+        limit:
+          capacity: 5
+          refill-tokens: 1
+          refill-period-seconds: 60
   rag:
     collection: eshop-policies
     max-results: 4

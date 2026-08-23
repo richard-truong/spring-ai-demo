@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,6 +34,7 @@ class ProductSuggestionControllerTest {
     ProductSuggestionUseCase productSuggestionUseCase;
 
     @Test
+    @WithMockUser
     void suggestReturnsProduct() throws Exception {
         when(productSuggestionUseCase.suggest(any()))
             .thenReturn(new ProductSuggestion("Laptop Gaming X1", "1.999.000đ", "RTX 4060, 16GB RAM"));
@@ -47,11 +49,20 @@ class ProductSuggestionControllerTest {
     }
 
     @Test
+    @WithMockUser
     void suggestValidationErrorReturns400() throws Exception {
         mockMvc.perform(post("/api/v1/suggest")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"productName\":\"\",\"platform\":\"\"}"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void suggestReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(post("/api/v1/suggest")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productName\":\"Laptop\",\"platform\":\"shopee\"}"))
+            .andExpect(status().isUnauthorized());
     }
 
 }

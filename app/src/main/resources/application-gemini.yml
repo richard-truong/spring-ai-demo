@@ -2,6 +2,12 @@ spring:
   ai:
     model:
       chat: google-genai
+      audio:
+        speech: none
+        transcription: none
+      embedding: none
+      image: none
+      moderation: none
     google:
       genai:
         api-key: ${GEMINI_API_KEY:}
@@ -14,6 +20,11 @@ langchain4j:
     chat-model:
       api-key: ${GEMINI_API_KEY:}
       model-name: gemini-3.6-flash
+    streaming-chat-model:
+      api-key: ${GEMINI_API_KEY:}
+      model-name: gemini-3.6-flash
+      return-thinking: true
+      send-thinking: true
     embedding-model:
       api-key: ${GEMINI_API_KEY:}
       model-name: gemini-embedding-2-preview

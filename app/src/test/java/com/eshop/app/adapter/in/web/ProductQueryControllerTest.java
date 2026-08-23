@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +36,7 @@ class ProductQueryControllerTest {
     ProductQueryUseCase productQueryUseCase;
 
     @Test
+    @WithMockUser
     void findAllReturnsProducts() throws Exception {
         when(productQueryUseCase.findAll()).thenReturn(List.of(
             new Product("p1", "Widget", "A widget", new Money("9.99", "USD"), 10)
@@ -50,6 +52,7 @@ class ProductQueryControllerTest {
     }
 
     @Test
+    @WithMockUser
     void findByIdReturnsProduct() throws Exception {
         when(productQueryUseCase.getById("p1"))
             .thenReturn(new Product("p1", "Widget", "A widget", new Money("9.99", "USD"), 10));
@@ -61,12 +64,19 @@ class ProductQueryControllerTest {
     }
 
     @Test
+    @WithMockUser
     void findByIdReturns404WhenProductIsMissing() throws Exception {
         when(productQueryUseCase.getById("missing"))
             .thenThrow(new ProductNotFoundException("missing"));
 
         mockMvc.perform(get("/api/v1/products/missing"))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void findAllReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/v1/products"))
+            .andExpect(status().isUnauthorized());
     }
 
 }
