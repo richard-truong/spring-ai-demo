@@ -17,6 +17,10 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  ai:
+    mcp:
+      server:
+        protocol: STREAMABLE
 
 app:
   jwt:
@@ -31,6 +35,8 @@ app:
       host: ${QDRANT_HOST:localhost}
       port: ${QDRANT_PORT:6334}
       api-key: ${QDRANT_API_KEY:}
+  mcp:
+    server-url: ${MCP_SERVER_URL:http://localhost:8080/mcp}
 
 langchain4j:
   chat-memory:
