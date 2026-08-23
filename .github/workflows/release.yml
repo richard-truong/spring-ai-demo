@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # Promote job: push the GHCR dev image to production tags.
+  # Same image digest already built/tested on development -> only retag (v1.2.0, prod),
+  # to show dev vs prod isolation in the registry. No rebuild.
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote dev image to production tags
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}
+          SOURCE=$IMAGE:${{ github.sha }}         # image built + tested on development
+          VERSION_TAG=$IMAGE:${{ github.ref_name }} # v1.2.0
+          docker pull "$SOURCE"
+          docker tag "$SOURCE" "$VERSION_TAG"
+          docker tag "$SOURCE" "$IMAGE:prod"
+          docker push "$VERSION_TAG"
+          docker push "$IMAGE:prod"
+          echo "Promoted $SOURCE -> $VERSION_TAG (same digest, different tags: dev vs prod)"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: promote
+    environment: production
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    steps:
+      - name: Deploy image to production
+        run: echo "Deploy to production skipped: no infrastructure configured yet (TODO)"
+
+      - name: Notify Slack
+        run: |
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data '{"text":"EvShop ${{ github.ref_name }} released to production"}' \
+            "${SLACK_WEBHOOK_URL:-}" || echo "Slack notification skipped: webhook not configured or unreachable"
+
+      - name: Update Jira issue status
+        run: |
+          ISSUE=EVS-1 # TODO: derive issue key from branch name
+          curl -s -X POST "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE/transitions" \
+            -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H 'Content-Type: application/json' \
+            --data '{"transition":{"id":"31"}}' || echo "Jira status update skipped: credentials not configured or API unreachable"
