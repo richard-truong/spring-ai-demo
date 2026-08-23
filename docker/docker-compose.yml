@@ -21,6 +21,16 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
 
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - eshop-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     build:
       context: ..
@@ -33,12 +43,17 @@ services:
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
       QDRANT_HOST: qdrant
       QDRANT_PORT: 6334
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   eshop-db-data:
   qdrant-data:
+  eshop-redis-data:

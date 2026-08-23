@@ -3,13 +3,14 @@ package com.eshop.core.domain.vo;
 import com.eshop.core.domain.exception.CurrencyMismatchException;
 import com.eshop.core.domain.exception.DomainException;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
 import java.util.Locale;
 import java.util.Objects;
 
-public record Money(BigDecimal amount, String currency) {
+public record Money(BigDecimal amount, String currency) implements Serializable {
 
     public static final int SCALE = 2;
 

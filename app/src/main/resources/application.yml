@@ -14,6 +14,15 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  cache:
+    type: redis
+    redis:
+      time-to-live: 5m
+      cache-null-values: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   mvc:
     problemdetails:
       enabled: true
@@ -26,6 +35,17 @@ app:
   jwt:
     secret: ${JWT_SECRET:}
     expiration: ${JWT_EXPIRATION:3600}
+  rate-limit:
+    default:
+      capacity: 60
+      refill-tokens: 30
+      refill-period-seconds: 60
+    rules:
+      - path-pattern: /api/v1/auth/**
+        limit:
+          capacity: 5
+          refill-tokens: 1
+          refill-period-seconds: 60
   rag:
     collection: eshop-policies
     max-results: 4

@@ -4,6 +4,7 @@ import com.eshop.core.domain.exception.DomainException;
 import com.eshop.core.domain.exception.InsufficientStockException;
 import com.eshop.core.domain.vo.Money;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 public record Product(
@@ -12,7 +13,7 @@ public record Product(
     String description,
     Money price,
     int stock
-) {
+) implements Serializable {
 
     public Product {
         Objects.requireNonNull(id, "id must not be null");

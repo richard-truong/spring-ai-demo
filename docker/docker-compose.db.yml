@@ -26,6 +26,20 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
 
+  redis:
+    image: redis:7-alpine
+    container_name: eshop-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - eshop-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   eshop-db-data:
   qdrant-data:
+  eshop-redis-data:

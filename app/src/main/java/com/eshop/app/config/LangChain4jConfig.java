@@ -1,6 +1,7 @@
 package com.eshop.app.config;
 
 import com.eshop.app.adapter.out.ai.ChatAssistant;
+import com.eshop.app.adapter.out.ai.ChatStreamingAssistant;
 import com.eshop.app.adapter.out.ai.ProductSuggestionAssistant;
 import com.eshop.app.tool.ProductTools;
 import com.eshop.app.memory.ChatMemoryJpaRepository;
@@ -9,6 +10,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
@@ -74,6 +76,21 @@ public class LangChain4jConfig {
                                        ObjectProvider<ToolProvider> toolProvider) {
         AiServices<ChatAssistant> builder = AiServices.builder(ChatAssistant.class)
             .chatModel(chatModel)
+            .chatMemoryProvider(chatMemoryProvider)
+            .tools(productTools);
+        contentRetriever.ifAvailable(builder::contentRetriever);
+        toolProvider.ifAvailable(builder::toolProvider);
+        return builder.build();
+    }
+
+    @Bean
+    public ChatStreamingAssistant chatStreamingAssistant(StreamingChatModel streamingChatModel,
+                                                         ChatMemoryProvider chatMemoryProvider,
+                                                         ObjectProvider<ContentRetriever> contentRetriever,
+                                                         ProductTools productTools,
+                                                         ObjectProvider<ToolProvider> toolProvider) {
+        AiServices<ChatStreamingAssistant> builder = AiServices.builder(ChatStreamingAssistant.class)
+            .streamingChatModel(streamingChatModel)
             .chatMemoryProvider(chatMemoryProvider)
             .tools(productTools);
         contentRetriever.ifAvailable(builder::contentRetriever);

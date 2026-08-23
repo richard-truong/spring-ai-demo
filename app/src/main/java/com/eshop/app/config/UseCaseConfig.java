@@ -1,11 +1,14 @@
 package com.eshop.app.config;
 
+import com.eshop.core.application.port.in.ChatStreamingUseCase;
 import com.eshop.core.application.port.in.ChatUseCase;
 import com.eshop.core.application.port.in.LoginUseCase;
+import com.eshop.core.application.port.in.ProductQueryUseCase;
 import com.eshop.core.application.port.in.ProductSuggestionUseCase;
 import com.eshop.core.application.port.in.PurchaseUseCase;
 import com.eshop.core.application.port.in.RegisterUseCase;
 import com.eshop.core.application.port.out.ChatMemoryPort;
+import com.eshop.core.application.port.out.ChatStreamingPort;
 import com.eshop.core.application.port.out.ClockPort;
 import com.eshop.core.application.port.out.IdGeneratorPort;
 import com.eshop.core.application.port.out.OrderRepositoryPort;
@@ -14,8 +17,10 @@ import com.eshop.core.application.port.out.ProductRepositoryPort;
 import com.eshop.core.application.port.out.ProductSuggestionPort;
 import com.eshop.core.application.port.out.TokenProviderPort;
 import com.eshop.core.application.port.out.UserRepositoryPort;
+import com.eshop.core.application.usecase.ChatStreamingUseCaseImpl;
 import com.eshop.core.application.usecase.ChatUseCaseImpl;
 import com.eshop.core.application.usecase.LoginUseCaseImpl;
+import com.eshop.core.application.usecase.ProductQueryUseCaseImpl;
 import com.eshop.core.application.usecase.ProductSuggestionUseCaseImpl;
 import com.eshop.core.application.usecase.PurchaseUseCaseImpl;
 import com.eshop.core.application.usecase.RegisterUseCaseImpl;
@@ -55,9 +60,20 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public ProductQueryUseCase productQueryUseCase(ProductRepositoryPort productRepository) {
+        return new ProductQueryUseCaseImpl(productRepository);
+    }
+
+    @Bean
     @Profile("langchain4j")
     public ChatUseCase chatUseCase(ChatMemoryPort chatMemoryPort) {
         return new ChatUseCaseImpl(chatMemoryPort);
+    }
+
+    @Bean
+    @Profile("langchain4j")
+    public ChatStreamingUseCase chatStreamingUseCase(ChatStreamingPort chatStreamingPort) {
+        return new ChatStreamingUseCaseImpl(chatStreamingPort);
     }
 
 }
