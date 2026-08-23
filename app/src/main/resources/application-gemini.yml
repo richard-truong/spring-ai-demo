@@ -13,4 +13,7 @@ langchain4j:
   google-ai-gemini:
     chat-model:
       api-key: ${GEMINI_API_KEY:}
-      model-name: gemini-2.5-flash
+      model-name: gemini-3.6-flash
+    embedding-model:
+      api-key: ${GEMINI_API_KEY:}
+      model-name: gemini-embedding-2-preview
