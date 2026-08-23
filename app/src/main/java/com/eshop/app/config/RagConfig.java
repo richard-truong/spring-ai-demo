@@ -2,6 +2,7 @@ package com.eshop.app.config;
 
 import com.eshop.app.rag.PolicyDocumentLoader;
 import com.eshop.app.rag.PolicyIndexer;
+import com.eshop.app.rag.RerankingContentRetriever;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.request.EmbeddingInputType;
@@ -27,14 +28,16 @@ public class RagConfig {
     public ContentRetriever policyContentRetriever(EmbeddingStore<TextSegment> embeddingStore,
                                                    EmbeddingModel embeddingModel,
                                                    @Value("${app.rag.max-results:4}") int maxResults,
-                                                   @Value("${app.rag.min-score:0.0}") double minScore) {
-        return EmbeddingStoreContentRetriever.builder()
+                                                   @Value("${app.rag.min-score:0.5}") double minScore,
+                                                   @Value("${app.rag.keyword-weight:0.3}") double keywordWeight) {
+        ContentRetriever baseRetriever = EmbeddingStoreContentRetriever.builder()
             .embeddingStore(embeddingStore)
             .embeddingModel(embeddingModel)
             .embeddingInputType(EmbeddingInputType.QUERY)
             .maxResults(maxResults)
             .minScore(minScore)
             .build();
+        return new RerankingContentRetriever(baseRetriever, keywordWeight);
     }
 
     @Bean

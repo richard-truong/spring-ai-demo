@@ -25,7 +25,8 @@ app:
   rag:
     collection: eshop-policies
     max-results: 4
-    min-score: 0.0
+    min-score: 0.5
+    keyword-weight: 0.3
     qdrant:
       host: ${QDRANT_HOST:localhost}
       port: ${QDRANT_PORT:6334}
