@@ -14,6 +14,7 @@ dependencies {
     implementation 'dev.langchain4j:langchain4j-spring-boot-starter'
     implementation 'dev.langchain4j:langchain4j-open-ai-spring-boot-starter'
     implementation 'dev.langchain4j:langchain4j-google-ai-gemini-spring-boot-starter:1.19.0-beta29'
+    implementation 'dev.langchain4j:langchain4j-qdrant'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'

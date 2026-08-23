@@ -10,8 +10,10 @@ import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,11 +65,14 @@ public class LangChain4jConfig {
     }
 
     @Bean
-    public ChatAssistant chatAssistant(ChatModel chatModel, ChatMemoryProvider chatMemoryProvider) {
-        return AiServices.builder(ChatAssistant.class)
+    public ChatAssistant chatAssistant(ChatModel chatModel,
+                                       ChatMemoryProvider chatMemoryProvider,
+                                       ObjectProvider<ContentRetriever> contentRetriever) {
+        AiServices<ChatAssistant> builder = AiServices.builder(ChatAssistant.class)
             .chatModel(chatModel)
-            .chatMemoryProvider(chatMemoryProvider)
-            .build();
+            .chatMemoryProvider(chatMemoryProvider);
+        contentRetriever.ifAvailable(builder::contentRetriever);
+        return builder.build();
     }
 
 }
