@@ -2,6 +2,7 @@ package com.eshop.app.config;
 
 import com.eshop.app.adapter.out.ai.ChatAssistant;
 import com.eshop.app.adapter.out.ai.ProductSuggestionAssistant;
+import com.eshop.app.tool.ProductTools;
 import com.eshop.app.memory.ChatMemoryJpaRepository;
 import com.eshop.app.memory.JpaChatMemoryStore;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -12,6 +13,7 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,11 +69,15 @@ public class LangChain4jConfig {
     @Bean
     public ChatAssistant chatAssistant(ChatModel chatModel,
                                        ChatMemoryProvider chatMemoryProvider,
-                                       ObjectProvider<ContentRetriever> contentRetriever) {
+                                       ObjectProvider<ContentRetriever> contentRetriever,
+                                       ProductTools productTools,
+                                       ObjectProvider<ToolProvider> toolProvider) {
         AiServices<ChatAssistant> builder = AiServices.builder(ChatAssistant.class)
             .chatModel(chatModel)
-            .chatMemoryProvider(chatMemoryProvider);
+            .chatMemoryProvider(chatMemoryProvider)
+            .tools(productTools);
         contentRetriever.ifAvailable(builder::contentRetriever);
+        toolProvider.ifAvailable(builder::toolProvider);
         return builder.build();
     }
 

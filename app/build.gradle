@@ -9,12 +9,14 @@ dependencies {
     implementation platform('org.springframework.ai:spring-ai-bom:1.1.5')
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
 
     implementation platform('dev.langchain4j:langchain4j-bom:1.19.0')
     implementation 'dev.langchain4j:langchain4j-spring-boot-starter'
     implementation 'dev.langchain4j:langchain4j-open-ai-spring-boot-starter'
     implementation 'dev.langchain4j:langchain4j-google-ai-gemini-spring-boot-starter:1.19.0-beta29'
     implementation 'dev.langchain4j:langchain4j-qdrant'
+    implementation 'dev.langchain4j:langchain4j-mcp'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
