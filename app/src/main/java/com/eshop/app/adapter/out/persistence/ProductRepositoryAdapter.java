@@ -4,6 +4,8 @@ import com.eshop.app.adapter.out.persistence.entity.ProductEntity;
 import com.eshop.core.application.port.out.ProductRepositoryPort;
 import com.eshop.core.domain.model.Product;
 import com.eshop.core.domain.vo.Money;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,8 +21,15 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     }
 
     @Override
+    @Cacheable(cacheNames = "products", key = "#id")
     public Optional<Product> findById(String id) {
         return repository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    @Cacheable(cacheNames = "products", key = "'all'")
+    public List<Product> findAll() {
+        return repository.findAll().stream().map(this::toDomain).toList();
     }
 
     @Override
@@ -29,11 +38,13 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     }
 
     @Override
+    @CacheEvict(cacheNames = "products", allEntries = true)
     public Product save(Product product) {
         return toDomain(repository.save(toEntity(product)));
     }
 
     @Override
+    @CacheEvict(cacheNames = "products", allEntries = true)
     public boolean decrementStock(String productId, int quantity) {
         return repository.decrementStock(productId, quantity) > 0;
     }

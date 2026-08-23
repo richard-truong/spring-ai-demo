@@ -25,6 +25,11 @@ public class InMemoryProductRepository implements ProductRepositoryPort {
     }
 
     @Override
+    public List<Product> findAll() {
+        return List.copyOf(store.values());
+    }
+
+    @Override
     public List<Product> findAllById(List<String> ids) {
         return ids.stream().map(store::get).filter(Objects::nonNull).toList();
     }

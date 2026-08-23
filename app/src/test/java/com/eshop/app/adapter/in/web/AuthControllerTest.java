@@ -3,6 +3,8 @@ package com.eshop.app.adapter.in.web;
 import com.eshop.app.adapter.in.security.JwtAuthFilter;
 import com.eshop.app.adapter.in.security.SecurityConfig;
 import com.eshop.app.adapter.out.security.JwtTokenProvider;
+import com.eshop.app.infrastructure.security.RateLimitFilter;
+import com.eshop.app.infrastructure.security.RateLimitProperties;
 import com.eshop.core.application.dto.TokenResult;
 import com.eshop.core.application.dto.UserResult;
 import com.eshop.core.application.port.in.LoginUseCase;
@@ -24,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import({SecurityConfig.class, JwtAuthFilter.class, JwtTokenProvider.class})
+@Import({SecurityConfig.class, JwtAuthFilter.class, JwtTokenProvider.class,
+    RateLimitFilter.class, RateLimitProperties.class})
 class AuthControllerTest {
 
     @Autowired

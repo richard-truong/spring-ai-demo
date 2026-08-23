@@ -1,11 +1,16 @@
 package com.eshop.app.adapter.in.web;
 
+import com.eshop.app.adapter.in.security.AuthenticatedUser;
 import com.eshop.app.adapter.in.security.JwtAuthFilter;
 import com.eshop.app.adapter.in.security.SecurityConfig;
 import com.eshop.app.adapter.out.security.JwtTokenProvider;
+import com.eshop.app.infrastructure.security.RateLimitFilter;
+import com.eshop.app.infrastructure.security.RateLimitProperties;
 import com.eshop.core.application.dto.ChatMessage;
 import com.eshop.core.application.dto.ChatReply;
+import com.eshop.core.application.port.in.ChatStreamingUseCase;
 import com.eshop.core.application.port.in.ChatUseCase;
+import com.eshop.core.application.port.in.StreamSink;
 import com.eshop.core.domain.vo.ChatRole;
 import com.eshop.core.domain.vo.Role;
 import org.junit.jupiter.api.Test;
@@ -14,23 +19,33 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ChatController.class)
 @ActiveProfiles("langchain4j")
-@Import({SecurityConfig.class, JwtAuthFilter.class, JwtTokenProvider.class})
+@Import({SecurityConfig.class, JwtAuthFilter.class, JwtTokenProvider.class,
+    RateLimitFilter.class, RateLimitProperties.class})
 class ChatControllerTest {
 
     @Autowired
@@ -41,6 +56,9 @@ class ChatControllerTest {
 
     @MockitoBean
     ChatUseCase chatUseCase;
+
+    @MockitoBean
+    ChatStreamingUseCase chatStreamingUseCase;
 
     @Test
     void replyWithoutTokenReturns401() throws Exception {
@@ -93,6 +111,41 @@ class ChatControllerTest {
         mockMvc.perform(delete("/api/v1/chat/s1")
                 .header(HttpHeaders.AUTHORIZATION, bearerToken()))
             .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void streamReturnsTokensAsSseEvents() throws Exception {
+        doAnswer(invocation -> {
+            StreamSink sink = invocation.getArgument(1);
+            Thread streamer = new Thread(() -> {
+                sink.onToken("Hello");
+                sink.onToken(" there");
+                sink.onComplete();
+            });
+            streamer.start();
+            return null;
+        }).when(chatStreamingUseCase).reply(any(), any());
+
+        MvcResult result = mockMvc.perform(post("/api/v1/chat/stream")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken())
+                .with(SecurityMockMvcRequestPostProcessors.authentication(authentication()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sessionId\":\"s1\",\"message\":\"hi\"}"))
+            .andExpect(request().asyncStarted())
+            .andReturn();
+
+        result.getAsyncResult(3000);
+        mockMvc.perform(asyncDispatch(result))
+            .andExpect(status().isOk())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
+            .andExpect(content().string(containsString("Hello")));
+    }
+
+    private UsernamePasswordAuthenticationToken authentication() {
+        return new UsernamePasswordAuthenticationToken(
+            new AuthenticatedUser("user-1", "alice@example.com", Role.CUSTOMER),
+            null,
+            List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")));
     }
 
     private String bearerToken() {
