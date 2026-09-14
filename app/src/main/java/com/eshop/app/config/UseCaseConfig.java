@@ -1,9 +1,11 @@
 package com.eshop.app.config;
 
+import com.eshop.core.application.port.in.ChatUseCase;
 import com.eshop.core.application.port.in.LoginUseCase;
 import com.eshop.core.application.port.in.ProductSuggestionUseCase;
 import com.eshop.core.application.port.in.PurchaseUseCase;
 import com.eshop.core.application.port.in.RegisterUseCase;
+import com.eshop.core.application.port.out.ChatMemoryPort;
 import com.eshop.core.application.port.out.ClockPort;
 import com.eshop.core.application.port.out.IdGeneratorPort;
 import com.eshop.core.application.port.out.OrderRepositoryPort;
@@ -12,12 +14,14 @@ import com.eshop.core.application.port.out.ProductRepositoryPort;
 import com.eshop.core.application.port.out.ProductSuggestionPort;
 import com.eshop.core.application.port.out.TokenProviderPort;
 import com.eshop.core.application.port.out.UserRepositoryPort;
+import com.eshop.core.application.usecase.ChatUseCaseImpl;
 import com.eshop.core.application.usecase.LoginUseCaseImpl;
 import com.eshop.core.application.usecase.ProductSuggestionUseCaseImpl;
 import com.eshop.core.application.usecase.PurchaseUseCaseImpl;
 import com.eshop.core.application.usecase.RegisterUseCaseImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class UseCaseConfig {
@@ -48,6 +52,12 @@ public class UseCaseConfig {
     @Bean
     public ProductSuggestionUseCase productSuggestionUseCase(ProductSuggestionPort productSuggestionPort) {
         return new ProductSuggestionUseCaseImpl(productSuggestionPort);
+    }
+
+    @Bean
+    @Profile("langchain4j")
+    public ChatUseCase chatUseCase(ChatMemoryPort chatMemoryPort) {
+        return new ChatUseCaseImpl(chatMemoryPort);
     }
 
 }
