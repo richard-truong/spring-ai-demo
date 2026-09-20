@@ -10,7 +10,8 @@ the Hexagonal Architecture (Ports & Adapters) pattern.
 - Language: Java 21
 - Build: Gradle (wrapper) — `gradlew` / `gradlew.bat`
 - Framework: Spring Boot 3.5.16, Spring Security 6.5.x
-- Package root: `com.eshop.app`
+- Gradle modules: `core` (package `com.eshop.core` — pure Java, no Spring on the classpath)
+  and `app` (package `com.eshop.app` — Spring Boot, adapters, wiring)
 
 ## Active skills
 
@@ -22,6 +23,46 @@ Always strictly follow and apply all active skills located in `.claude/skills/`:
 - **springboot-security**: Implement security, authentication, and authorization rules properly.
 - **springboot-tdd**: Apply Test-Driven Development (TDD) using JUnit 5 & Mockito.
 - **springboot-verification**: Run tests and verification steps to confirm code correctness before finishing tasks.
+- **create-github-pr**: PR contents, branch naming (`lesson/<NN>-<kebab-slug>`), push and `gh` commands.
+
+**Precedence when skills disagree.** `springboot-patterns` and `springboot-tdd` are generic
+multi-project skills and two of their defaults do **not** hold here:
+
+- `springboot-patterns` teaches a classic controller → service → repository layering. This repo is
+  ports-and-adapters. `hexagonal-architecture` and `.claude/commands/implement.md` win.
+- `springboot-tdd` advises Mockito and a JaCoCo coverage target. **Mockito is not on `core`'s test
+  classpath** and there is no JaCoCo plugin. In `core`, use AssertJ plus hand-written fakes
+  (`core/src/test/java/com/eshop/core/test/fake/`). In `app`, Mockito and `@MockitoBean` are correct.
+
+## Active subagents
+
+`.claude/agents/` holds 6 read-mostly specialists. Delegate to them via the Agent tool when a task
+would otherwise flood the main conversation with search results or build logs.
+
+- **hexagon-guard** (read-only) — audits hexagonal boundary violations after changes under
+  `core/` or `app/adapter/`.
+- **ai-adapter-smith** — adds/changes AI features (Spring AI, LangChain4j, chat memory, prompts).
+- **core-test-author** — writes `core` tests with hand-written fakes.
+- **build-doctor** — triages a failing `./gradlew build`, finds the failing module first.
+- **secret-sentinel** (read-only) — audits tracked secrets and credential handling.
+- **security-reviewer** (read-only) — audits application code: authorization, injection, CORS.
+
+The three read-only agents have no `Write`/`Edit`, so they cannot alter what they review.
+
+## Slash commands
+
+`.claude/commands/`: `/implement`, `/plan`, `/fix`, `/review`, `/handoff`.
+
+## Hooks
+
+`.claude/settings.json` wires two `PreToolUse` guards (scripts in `.claude/hooks/`):
+
+- **guard-secrets.py** — blocks a `git add`/`git commit` that would introduce a credential file
+  (`.env`, `*.pem`, `id_rsa`, …). Deletions are allowed: removing a secret is the fix.
+- **guard-core-imports.py** — blocks a write that puts Spring, JPA, servlet, Jackson or jjwt into
+  `core/src/`. The forbidden set mirrors ArchUnit rules 1–3 exactly.
+
+Both need `python3` (not `jq`). They fail open: any parse error exits 0 and lets the call proceed.
 
 ## Build & test commands
 
@@ -66,5 +107,8 @@ Rules:
 
 ## Testing
 
-- `@SpringBootTest` context tests under `src/test/java/com/eshop/app`.
+- Two separate test trees: `core/src/test/java/com/eshop/core/` (JUnit 5 + AssertJ, hand-written
+  fakes, **no Mockito**) and `app/src/test/java/com/eshop/app/` (`@WebMvcTest` + `MockMvc` +
+  `@MockitoBean`; integration extends `app/support/PostgresIntegrationTest.java` with Testcontainers).
+- `HexagonalArchitectureTest` (8 ArchUnit rules) is a first-class gate — it must stay green.
 - Prefer focused unit tests for domain logic; use mocks for ports.
