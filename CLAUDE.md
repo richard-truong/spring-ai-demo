@@ -49,6 +49,40 @@ would otherwise flood the main conversation with search results or build logs.
 
 The three read-only agents have no `Write`/`Edit`, so they cannot alter what they review.
 
+## Coding workflow
+
+Writing source directly, end to end, is the exception — not the default. Every task that changes
+code walks this sequence, and **the agents are a gate, not an optional extra**: the task is not
+finished until the audits in steps 5–6 have actually been run and reported. "It was a small
+change" is not grounds to skip them; a small change under `core/` or `app/adapter/` is exactly
+what `hexagon-guard` exists to check.
+
+| # | Step | Who | Fires when |
+|---|---|---|---|
+| 1 | Survey before writing | `Explore` ×1–3, in parallel | Any task where you cannot name the files to touch up front. Find what to reuse before inventing anything. |
+| 2 | Design | `Plan` ×1 | Anything beyond a one-line fix. Get the plan approved, then implement. |
+| 3 | Write code | Main agent, or `core-test-author` / `ai-adapter-smith` | Delegate `core` tests to `core-test-author`; delegate Spring AI / LangChain4j work to `ai-adapter-smith`. |
+| 4 | Build | `./gradlew build`; failures go to `build-doctor` | Always, before claiming done. |
+| 5 | Boundary audit | `hexagon-guard` (read-only) | Any change under `core/` or `app/adapter/`. |
+| 6 | Security audit | `security-reviewer`; add `secret-sentinel` before a PR | Any new endpoint, auth path, permission rule, or config change. |
+| 7 | Open the PR | `create-github-pr` skill | Branch `lesson/<NN>-<kebab-slug>`. |
+
+Rules that follow from the table:
+
+- **Never debug a red `./gradlew build` by hand.** Hand it to `build-doctor` to isolate the
+  failing module first; it reads the logs so the main thread does not have to.
+- **Steps 1–2 are for you.** Do not open the editor before the plan is approved — no
+  write-then-justify.
+- **Load the matching skill before writing the code it governs**, not afterwards as a
+  rationalisation: `hexagonal-architecture` for any new domain/application/adapter code,
+  `springboot-security` before touching auth, `springboot-tdd` before writing tests,
+  `springboot-verification` before declaring the work done.
+- **Report the audit results, including "no findings."** A skipped audit is indistinguishable
+  from a passed one unless you say which ran.
+- Do not delegate a step just to have delegated: the value is in the gate, not the ceremony. If
+  you genuinely skip a step, say so and why in the final summary — an undeclared skip is the
+  thing this section is here to prevent.
+
 ## Slash commands
 
 `.claude/commands/`: `/implement`, `/plan`, `/fix`, `/review`, `/handoff`.

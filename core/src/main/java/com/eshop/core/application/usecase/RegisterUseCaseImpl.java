@@ -11,6 +11,7 @@ import com.eshop.core.domain.exception.DomainException;
 import com.eshop.core.domain.exception.EmailAlreadyUsedException;
 import com.eshop.core.domain.model.User;
 import com.eshop.core.domain.vo.Email;
+import com.eshop.core.domain.vo.Password;
 import com.eshop.core.domain.vo.Role;
 
 public class RegisterUseCaseImpl implements RegisterUseCase {
@@ -40,17 +41,12 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         if (name.length() > 100) {
             throw new DomainException("name must be at most 100 characters");
         }
-        if (command.password() == null || command.password().isBlank()) {
-            throw new DomainException("password must not be blank");
-        }
-        if (command.password().length() < 8 || command.password().length() > 72) {
-            throw new DomainException("password must be between 8 and 72 characters");
-        }
+        Password password = new Password(command.password());
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyUsedException(email.value());
         }
 
-        String passwordHash = passwordEncoder.encode(command.password());
+        String passwordHash = passwordEncoder.encode(password.value());
         User user = new User(
             idGenerator.nextId(),
             email,

@@ -2,7 +2,11 @@
 description: Run build/tests, diagnose failures, and automatically fix errors
 ---
 
-Run the build to diagnose issues:
+## Step 1 — hand the failure to `build-doctor` first
+
+Do **not** start by reading the Gradle log yourself. Delegate it: `build-doctor` isolates the
+failing module (which `:core:` and `:app:` fail for quite different reasons) and reports the
+smallest correct fix. Run the build to produce the log it needs:
 
 ```bash
 ./gradlew build
@@ -10,12 +14,17 @@ Run the build to diagnose issues:
 
 (Not `clean` — it forces a full recompile for no benefit here.)
 
-If compilation or test errors are reported:
+If `build-doctor` reports that the failure is an architectural leak rather than a compile error,
+bring in **`hexagon-guard`** before changing anything — a `core` compile error caused by a
+forbidden import means a port is missing, not that a dependency should be added.
 
-1. Identify which module failed first. `:core:` and `:app:` fail for different reasons; Gradle
-   names the failing task, so read it before editing anything.
-2. Reproduce in isolation: `./gradlew :core:test --tests '*ClassName*'` (or `:app:`).
-3. Inspect the stack trace and failing files, then apply the smallest correct fix.
+## Step 2 — apply the fix
+
+Reproduce in isolation before editing: `./gradlew :core:test --tests '*ClassName*'` (or `:app:`).
+Then apply the smallest correct fix.
+
+If the fix changes anything under `core/` or `app/adapter/`, **`hexagon-guard`** must re-audit
+before you call it done.
 
 ## Guardrails — do not do these to go green
 
@@ -28,4 +37,4 @@ If compilation or test errors are reported:
 - A skipped Testcontainers test is not a failure — they are `disabledWithoutDocker`.
 
 Re-run `./gradlew build` to confirm. If it still fails, report that plainly rather than claiming
-success.
+success. Name the agents you consulted and what they found.

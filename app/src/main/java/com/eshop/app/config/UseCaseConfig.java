@@ -1,5 +1,6 @@
 package com.eshop.app.config;
 
+import com.eshop.core.application.port.in.ChangePasswordUseCase;
 import com.eshop.core.application.port.in.ChatUseCase;
 import com.eshop.core.application.port.in.LoginUseCase;
 import com.eshop.core.application.port.in.ProductSuggestionUseCase;
@@ -14,6 +15,7 @@ import com.eshop.core.application.port.out.ProductRepositoryPort;
 import com.eshop.core.application.port.out.ProductSuggestionPort;
 import com.eshop.core.application.port.out.TokenProviderPort;
 import com.eshop.core.application.port.out.UserRepositoryPort;
+import com.eshop.core.application.usecase.ChangePasswordUseCaseImpl;
 import com.eshop.core.application.usecase.ChatUseCaseImpl;
 import com.eshop.core.application.usecase.LoginUseCaseImpl;
 import com.eshop.core.application.usecase.ProductSuggestionUseCaseImpl;
@@ -39,6 +41,12 @@ public class UseCaseConfig {
                                      PasswordEncoderPort passwordEncoder,
                                      TokenProviderPort tokenProvider) {
         return new LoginUseCaseImpl(userRepository, passwordEncoder, tokenProvider);
+    }
+
+    @Bean
+    public ChangePasswordUseCase changePasswordUseCase(UserRepositoryPort userRepository,
+                                                       PasswordEncoderPort passwordEncoder) {
+        return new ChangePasswordUseCaseImpl(userRepository, passwordEncoder);
     }
 
     @Bean

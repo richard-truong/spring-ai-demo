@@ -24,4 +24,8 @@ public record User(
         Objects.requireNonNull(createdAt, "createdAt must not be null");
     }
 
+    public User changePassword(String newPasswordHash) {
+        return new User(id, email, name, newPasswordHash, role, createdAt);
+    }
+
 }

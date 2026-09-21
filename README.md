@@ -31,6 +31,7 @@ Configuration is injected via environment variables (see `.env.example`).
 
 - `POST /api/v1/auth/register` — create a customer account.
 - `POST /api/v1/auth/login` — authenticate and return a JWT.
+- `PUT /api/v1/auth/password` — change your own password (requires `Authorization: Bearer <jwt>`).
 - `POST /api/v1/orders` — place an order (requires `Authorization: Bearer <jwt>`).
 
 ## Git workflow

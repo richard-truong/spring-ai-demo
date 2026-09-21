@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -92,6 +93,53 @@ class EndToEndFlowTest extends PostgresIntegrationTest {
         mockMvc.perform(post("/api/v1/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"items\":[{\"productId\":\"" + ESPRESSO_ID + "\",\"quantity\":1}]}"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void changePasswordThenLoginWithNewPassword() throws Exception {
+        String email = uniqueEmail();
+        register(email);
+        String token = login(email);
+
+        mockMvc.perform(put("/api/v1/auth/password")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"currentPassword\":\"S3cret!Pass\",\"newPassword\":\"N3w!Passw0rd\"}"))
+            .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\",\"password\":\"S3cret!Pass\"}"))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + email + "\",\"password\":\"N3w!Passw0rd\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").isNotEmpty());
+    }
+
+    @Test
+    void changePasswordWithWrongCurrentKeepsOldPassword() throws Exception {
+        String email = uniqueEmail();
+        register(email);
+        String token = login(email);
+
+        mockMvc.perform(put("/api/v1/auth/password")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"currentPassword\":\"wrong-pass\",\"newPassword\":\"N3w!Passw0rd\"}"))
+            .andExpect(status().isUnauthorized());
+
+        login(email);
+    }
+
+    @Test
+    void changePasswordWithoutTokenReturns401() throws Exception {
+        mockMvc.perform(put("/api/v1/auth/password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"currentPassword\":\"S3cret!Pass\",\"newPassword\":\"N3w!Passw0rd\"}"))
             .andExpect(status().isUnauthorized());
     }
 

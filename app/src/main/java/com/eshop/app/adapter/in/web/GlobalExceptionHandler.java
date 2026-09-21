@@ -6,6 +6,7 @@ import com.eshop.core.domain.exception.EmailAlreadyUsedException;
 import com.eshop.core.domain.exception.EmptyOrderException;
 import com.eshop.core.domain.exception.InsufficientStockException;
 import com.eshop.core.domain.exception.InvalidCredentialsException;
+import com.eshop.core.domain.exception.InvalidCurrentPasswordException;
 import com.eshop.core.domain.exception.ProductNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCurrentPasswordException.class)
+    ProblemDetail handleInvalidCurrentPassword(InvalidCurrentPasswordException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
